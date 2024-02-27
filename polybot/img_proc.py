@@ -50,9 +50,22 @@ class Img:
 
             self.data[i] = res
 
-    def rotate(self):
-        # TODO remove the `raise` below, and write your implementation
-        raise NotImplementedError()
+    def rotate(self, direction='clockwise'):
+        """
+        Rotate the image in the specified direction.
+
+        :param direction: 'clockwise' or 'counterclockwise'
+        """
+
+        # Transpose the image for both directions
+        self._transpose()
+
+        if direction == 'clockwise':
+            # For clockwise rotation, reverse the rows after transposing
+            self._reverse_rows()
+        elif direction == 'counterclockwise':
+            # For counterclockwise rotation, reverse the columns (the whole image here) after transposing
+            self._reverse_columns()
 
     def salt_n_pepper(self):
         # TODO remove the `raise` below, and write your implementation
@@ -65,3 +78,22 @@ class Img:
     def segment(self):
         # TODO remove the `raise` below, and write your implementation
         raise NotImplementedError()
+
+    def _transpose(self):
+        """
+        Transpose the image (swap rows with columns).
+        """
+        self.data = list(map(list, zip(*self.data)))
+
+    def _reverse_rows(self):
+        """
+        Reverse each row in the image.
+        """
+        self.data = [row[::-1] for row in self.data]
+
+    def _reverse_columns(self):
+        """
+        Reverse each column in the image.
+        This can be done by reversing the entire image.
+        """
+        self.data.reverse()
