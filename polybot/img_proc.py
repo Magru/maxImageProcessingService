@@ -1,5 +1,6 @@
 from pathlib import Path
 from matplotlib.image import imread, imsave
+import random
 
 
 def rgb2gray(rgb):
@@ -68,8 +69,20 @@ class Img:
             self._reverse_columns()
 
     def salt_n_pepper(self):
-        # TODO remove the `raise` below, and write your implementation
-        raise NotImplementedError()
+        """
+        Add salt and pepper noise to the image based on the specified algorithm. (see comments below)
+        """
+        height = len(self.data)
+        width = len(self.data[0])
+
+        for i in range(height):
+            for j in range(width):
+                rand = random.random()
+                if rand < 0.2:
+                    self.data[i][j] = 255  # Set to maximum intensity for 'salt'
+                elif rand > 0.8:
+                    self.data[i][j] = 0  # Set to minimum intensity for 'pepper'
+                # If the random number is between 0.2 and 0.8, do nothing (keep the original pixel value)
 
     def concat(self, other_img, direction='horizontal'):
         # TODO remove the `raise` below, and write your implementation
