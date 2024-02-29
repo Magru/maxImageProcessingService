@@ -85,12 +85,41 @@ class Img:
                 # If the random number is between 0.2 and 0.8, do nothing (keep the original pixel value)
 
     def concat(self, other_img, direction='horizontal'):
-        # TODO remove the `raise` below, and write your implementation
-        raise NotImplementedError()
+        """
+        Concatenate self with another Img instance either horizontally or vertically.
+
+        :param other_img: Another instance of Img to concatenate with.
+        :param direction: The direction of concatenation ('horizontal' or 'vertical').
+        :raises RuntimeError: If the dimensions of the images are not compatible.
+        """
+        if direction == 'horizontal':
+            # Check if heights of the two images are equal
+            if len(self.data) != len(other_img.data):
+                raise RuntimeError("Images have different heights, so they cannot be concatenated horizontally.")
+            # Concatenate each row of self with the corresponding row of other_img
+            concatenated_data = [row_self + row_other for row_self, row_other in zip(self.data, other_img.data)]
+
+        elif direction == 'vertical':
+            # Check if widths of the two images are equal
+            if any(len(row_self) != len(row_other) for row_self, row_other in zip(self.data, other_img.data)):
+                raise RuntimeError("Images have different widths, so they cannot be concatenated vertically.")
+            # Concatenate the whole of other_img.data to self.data
+            concatenated_data = self.data + other_img.data
+
+        else:
+            raise ValueError("Unsupported direction for concatenation. Please choose 'horizontal' or 'vertical'.")
+
+        # Store the concatenated image data
+        self.data = concatenated_data
 
     def segment(self):
-        # TODO remove the `raise` below, and write your implementation
-        raise NotImplementedError()
+        """
+        Segment the image by setting pixel values to white (255) if their intensity is greater than 100,
+        or to black (0) otherwise.
+        """
+        for i in range(len(self.data)):
+            for j in range(len(self.data[i])):
+                self.data[i][j] = 255 if self.data[i][j] > 100 else 0
 
     def _transpose(self):
         """
