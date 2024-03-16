@@ -1,6 +1,7 @@
 from pathlib import Path
 from matplotlib.image import imread, imsave
 import random
+from loguru import logger
 
 
 def rgb2gray(rgb):
@@ -93,10 +94,8 @@ class Img:
         :raises RuntimeError: If the dimensions of the images are not compatible.
         """
         if direction == 'horizontal':
-            # Check if heights of the two images are equal
             if len(self.data) != len(other_img.data):
                 raise RuntimeError("Images have different heights, so they cannot be concatenated horizontally.")
-            # Concatenate each row of self with the corresponding row of other_img
             concatenated_data = [row_self + row_other for row_self, row_other in zip(self.data, other_img.data)]
 
         elif direction == 'vertical':
@@ -121,6 +120,33 @@ class Img:
             for j in range(len(self.data[i])):
                 self.data[i][j] = 255 if self.data[i][j] > 100 else 0
 
+    def handle_filter(self, filter_name, **kwargs):
+        """
+        Dynamically executes a filter method based on its name.
+
+        Args:
+        - filter_name (str): The name of the filter method to run.
+        - **kwargs: Optional keyword arguments to pass to the filter method.
+
+        Returns:
+        - The result of the filter method, if any.
+
+        Raises:
+        - AttributeError: If the specified filter method does not exist.
+        """
+        # Dynamically fetch the method by name
+        method = getattr(self, filter_name, None)
+
+        if not method:
+            raise AttributeError(f"Filter method '{filter_name}' not found.")
+
+        # Call the method if it exists, passing any additional keyword arguments
+        return method(**kwargs)
+
+    def clear(self):
+        self._remove_filtered_image()
+        self._remove_original_image()
+
     def _transpose(self):
         """
         Transpose the image (swap rows with columns).
@@ -139,3 +165,24 @@ class Img:
         This can be done by reversing the entire image.
         """
         self.data.reverse()
+
+    def _remove_original_image(self):
+        """
+        Removes the original image file.
+        """
+        if self.path.exists():
+            self.path.unlink()
+            print(f"Removed original image: {self.path}")
+        else:
+            print(f"Original image file does not exist: {self.path}")
+
+    def _remove_filtered_image(self):
+        """
+        Removes the filtered image file.
+        """
+        filtered_path = self.path.with_name(self.path.stem + '_filtered' + self.path.suffix)
+        if filtered_path.exists():
+            filtered_path.unlink()
+            print(f"Removed filtered image: {filtered_path}")
+        else:
+            print(f"Filtered image file does not exist: {filtered_path}")
