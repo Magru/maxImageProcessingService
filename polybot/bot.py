@@ -115,6 +115,11 @@ class Bot:
                 f"Your chat ID is {chat_id}."
             )
 
+        def error_message():
+            return (
+                f"Some error... Sorry"
+            )
+
         def default_command():
             return f"I'm not sure how to handle that command, {chat_id}. Try /help for more information."
 
@@ -123,6 +128,7 @@ class Bot:
             '/start': start_command,
             '/help': help_command,
             '/about': about_command,
+            'error': error_message,
             'action_not_valid': action_not_valid_message,
             'caption_not_defined': caption_not_defined_message
         }
@@ -247,35 +253,34 @@ class ImageProcessingBot(Bot):
 
         caption = msg.get('caption')
         media_group_id = msg.get('media_group_id')
-        if self.is_current_msg_photo(msg):
-            single_file_path = self.download_user_photo(msg)
-        try:
-            if not caption:
-                group = _if_media_group_ready(media_group_id)
-                logger.info(_if_media_group_ready)
-                if group:
-                    first_image = Img(group[0])
-                    second_image = Img(group[1])
-                    first_image.handle_filter('concat', other_img=second_image)
-                    filtered_image = first_image.save_img()
-                    self.send_photo(chat_id, filtered_image)
-                    clear_photos_folder()
-                    return
 
-                self.send_text(chat_id, self.handle_text_message('caption_not_defined', chat_id))
-            elif self._validate_action(caption):
-                if caption == 'concat':
-                    media_group_file = open('photos/' + media_group_id, 'w')
-                    media_group_file.close()
-                else:
-                    img = Img(single_file_path)
-                    img.handle_filter(caption)
-                    filtered_image_path = img.save_img()
-                    self.send_photo(chat_id, filtered_image_path)
-                    clear_photos_folder()
+        if not caption:
+            group = _if_media_group_ready(media_group_id)
+            logger.info(_if_media_group_ready)
+            if group:
+                first_image = Img(group[0])
+                second_image = Img(group[1])
+                first_image.handle_filter('concat', other_img=second_image)
+                filtered_image = first_image.save_img()
+                self.send_photo(chat_id, filtered_image)
+                clear_photos_folder()
+                return
+
+            self.send_text(chat_id, self.handle_text_message('caption_not_defined', chat_id))
+        elif self._validate_action(caption.lower()):
+            if caption.lower() == 'concat':
+                media_group_file = open('photos/' + media_group_id, 'w')
+                media_group_file.close()
             else:
-                self.send_text(chat_id, self.handle_text_message('action_not_valid', chat_id))
-
-        except RuntimeError as e:
-            self.send_text(chat_id, f"Error occurred: {str(e)}")
-
+                if self.is_current_msg_photo(msg):
+                    try:
+                        single_file_path = self.download_user_photo(msg)
+                        img = Img(single_file_path)
+                        img.handle_filter(caption.lower())
+                        filtered_image_path = img.save_img()
+                        self.send_photo(chat_id, filtered_image_path)
+                        clear_photos_folder()
+                    except Exception as err:
+                        self.send_text(chat_id, self.handle_text_message('error', chat_id))
+        else:
+            self.send_text(chat_id, self.handle_text_message('action_not_valid', chat_id))
