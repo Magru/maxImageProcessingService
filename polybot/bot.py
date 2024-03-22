@@ -240,10 +240,15 @@ class ImageProcessingBot(Bot):
         return action in self.actions
 
     def handle_message(self, msg):
-        caption = msg.get('caption')
         chat_id = msg['chat']['id']
+        if 'text' in msg:
+            self.send_text(chat_id, self.handle_text_message(msg['text'], chat_id))
+            return
+
+        caption = msg.get('caption')
         media_group_id = msg.get('media_group_id')
-        single_file_path = self.download_user_photo(msg)
+        if self.is_current_msg_photo(msg):
+            single_file_path = self.download_user_photo(msg)
         try:
             if not caption:
                 group = _if_media_group_ready(media_group_id)
@@ -258,9 +263,7 @@ class ImageProcessingBot(Bot):
                     return
 
                 self.send_text(chat_id, self.handle_text_message('caption_not_defined', chat_id))
-                return
-
-            if self._validate_action(caption):
+            elif self._validate_action(caption):
                 if caption == 'concat':
                     media_group_file = open('photos/' + media_group_id, 'w')
                     media_group_file.close()
